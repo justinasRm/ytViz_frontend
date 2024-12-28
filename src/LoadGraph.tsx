@@ -1,64 +1,21 @@
 import React from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 import * as d3 from 'd3-force';
-import './App.css';
+import { EdgeData, NodeData, graphResponse } from './App';
 
 type SelectedInfo =
     | { type: 'node'; data: RenderableNode }
     | { type: 'edge'; data: { source: RenderableNode | string; target: RenderableNode | string; like_count: number; comment: string } }
     | null;
 
-interface BaseNode {
-    id: string;
-    channel_title: string;
-    thumbnail_link: string;
-    view_count: string;
-}
-
-interface VideoNode extends BaseNode {
-    type: 'video';
-    comment_count: string;
-    like_count: string;
-    title: string;
-}
-
-interface UserNode extends BaseNode {
-    type: 'user';
-    subscriber_count: string;
-    video_count: string;
-}
-
-export type NodeData = VideoNode | UserNode;
-
-export type RenderableNode = NodeData & { x: number; y: number };
-
-type EdgeData = {
-    source: string;
-    target: string;
-    like_count: number;
-    comment: string;
-};
-
-type ResponseType = {
-    nodes: NodeData[];
-    edges: EdgeData[];
-};
+type RenderableNode = NodeData & { x: number; y: number };
 
 const imageCache = new Map<string, HTMLImageElement>();
 
-function preloadImages(nodes: NodeData[]) {
-    nodes.forEach((node) => {
-        if (node.thumbnail_link && !imageCache.has(node.thumbnail_link)) {
-            const img = new Image();
-            img.src = node.thumbnail_link;
-            imageCache.set(node.thumbnail_link, img);
-        }
-    });
-}
-
 const drawNode = (node: RenderableNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const isVideo = node.type === 'video';
-    const img = node.thumbnail_link && imageCache.get(node.thumbnail_link);
+    const img = node.thumbnail_link ? imageCache.get(node.thumbnail_link) : null;
+
     const label = (isVideo && node.title) || node.channel_title || node.id;
 
     // Dynamic node size based on type and zoom level
@@ -70,13 +27,13 @@ const drawNode = (node: RenderableNode, ctx: CanvasRenderingContext2D, globalSca
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    if (globalScale < 0.3) {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI);
-        ctx.fillStyle = isVideo ? '#CCC' : '#1f78b4';
-        ctx.fill();
-        return;
-    }
+    // if (globalScale < 0.3) {
+    //     ctx.beginPath();
+    //     ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI);
+    //     ctx.fillStyle = isVideo ? '#CCC' : '#1f78b4';
+    //     ctx.fill();
+    //     return;
+    // }
 
     if (img && img.complete && img.naturalHeight !== 0) {
         const width = size; // Videos stay rectangular, users circular
@@ -125,8 +82,7 @@ const drawNode = (node: RenderableNode, ctx: CanvasRenderingContext2D, globalSca
 };
 
 
-function LoadGraph() {
-    const [graphData, setGraphData] = React.useState<ResponseType>({ nodes: [], edges: [] });
+function LoadGraph({ graphData }: { graphData: graphResponse }) {
     const memoizedGraphData = React.useMemo(() => ({
         nodes: graphData.nodes,
         links: graphData.edges,
@@ -138,26 +94,27 @@ function LoadGraph() {
     // -100, -500 looks good when not a lot of comments.
     const [selectedInfo, setSelectedInfo] = React.useState<SelectedInfo>(null);
 
+    const preloadImages = (nodes: NodeData[]) => {
+        nodes.forEach((node) => {
+            if (node.thumbnail_link && !imageCache.has(node.thumbnail_link)) {
+                const img = new Image();
+                img.src = node.thumbnail_link;
+                img.onload = () => {
+                    imageCache.set(node.thumbnail_link, img);
+                };
+                img.onerror = () => {
+                    console.error(`Failed to load image: ${node.thumbnail_link}`);
+                };
+            }
+        });
+    };
 
     React.useEffect(() => {
-        fetch('http://127.0.0.1:8000/graph')
-            .then((response) => response.json())
-            .then((data: ResponseType) => {
-                data.nodes.sort((a, b) => (a.type === 'video' ? 1 : -1));
+        if (graphData.nodes) {
+            preloadImages(graphData.nodes);
+        }
+    }, [graphData])
 
-                preloadImages(data.nodes);
-                const uniqueNodes = Array.from(new Map(data.nodes.map(node => [node.id, node])).values());
-                const uniqueEdges = Array.from(
-                    new Map(data.edges.map((edge) => [`${edge.source}-${edge.target}`, edge])).values()
-                );
-
-                setGraphData({
-                    nodes: uniqueNodes,
-                    edges: uniqueEdges
-                });
-            })
-            .catch((error) => console.error('Error fetching graph data:', error));
-    }, []);
     React.useEffect(() => {
         if (graphRef.current) {
             const chargeForce = d3.forceManyBody<RenderableNode>()
