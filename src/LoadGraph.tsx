@@ -27,14 +27,6 @@ const drawNode = (node: RenderableNode, ctx: CanvasRenderingContext2D, globalSca
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // if (globalScale < 0.3) {
-    //     ctx.beginPath();
-    //     ctx.arc(node.x, node.y, size / 2, 0, 2 * Math.PI);
-    //     ctx.fillStyle = isVideo ? '#CCC' : '#1f78b4';
-    //     ctx.fill();
-    //     return;
-    // }
-
     if (img && img.complete && img.naturalHeight !== 0) {
         const width = size; // Videos stay rectangular, users circular
         const height = isVideo ? (width / 16) * 9 : size;

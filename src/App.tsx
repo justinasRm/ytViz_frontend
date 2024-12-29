@@ -71,7 +71,7 @@ function App() {
           setError('An unexpected error occurred');
         }
       } finally {
-        dispatch(setLoadingWithDelay(false, 5));
+        dispatch(setLoadingWithDelay(false, 1));
       }
     };
 

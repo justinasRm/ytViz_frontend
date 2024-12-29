@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ReactLoading from 'react-loading';
 
 interface LoadingComponentProps {
-    loading: boolean; // Controls whether the component is loading or fading out
+    loading: boolean;
 }
 
 const LoadingComponent: React.FC<LoadingComponentProps> = ({ loading }) => {
@@ -10,23 +10,22 @@ const LoadingComponent: React.FC<LoadingComponentProps> = ({ loading }) => {
 
     useEffect(() => {
         if (!loading) {
-            // Start fade-out when `loading` becomes false
             const fadeOutTimer = setTimeout(() => {
-                setIsVisible(false); // After fade-outTime, hide the component
-            }, 1000); // Convert seconds to milliseconds
+                setIsVisible(false);
+            }, 2000);
 
-            return () => clearTimeout(fadeOutTimer); // Cleanup on unmount
+            return () => clearTimeout(fadeOutTimer);
         } else {
-            setIsVisible(true); // Show the component when `loading` is true
+            setIsVisible(true);
         }
     }, [loading]);
 
-    if (!isVisible) return null; // Completely unmount after fade-out completes
+    if (!isVisible) return null;
 
     return (
         <div
             className={`loaderParent ${loading ? 'fade-in' : 'fade-out'}`}
-            style={{ transitionDuration: `1s` }}
+            style={{ transitionDuration: `2s` }}
         >
             <p>Loading...</p>
             <ReactLoading
