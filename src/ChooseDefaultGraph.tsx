@@ -1,7 +1,15 @@
 import React from 'react';
 import './css/ChooseDefaultGraph.css';
+import Switch from './helpers/Switch';
 
 function ChooseDefaultGraph({ setNumber }: { setNumber: React.Dispatch<React.SetStateAction<number | null>> }) {
+
+    const [graphType, setGraphType] = React.useState<'3d' | '2d'>((localStorage.getItem('graphType') as '2d' | '3d') || '2d');
+
+    React.useEffect(() => {
+        localStorage.setItem('graphType', graphType);
+    }, [graphType]);
+
     return (
         <div className='chooseDefaultGraph-parent'>
             <div className='chooseDefaultGraph-inner'>
@@ -32,6 +40,9 @@ function ChooseDefaultGraph({ setNumber }: { setNumber: React.Dispatch<React.Set
 
                 </div>
             </div>
+            <h3 style={{ marginTop: 100, color: 'white', fontSize: '2rem' }}>Set graph type</h3>
+            <Switch isOn={graphType === '3d'} handleToggle={() => { setGraphType(graphType === '3d' ? '2d' : '3d') }} />
+            <span style={{ color: 'white', marginTop: 20 }}>2D graphs are easier to render(less laggy)</span>
 
         </div>
     );

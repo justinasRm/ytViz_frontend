@@ -1,0 +1,55 @@
+/* Switch.css */
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: white;
+    font-size: 1.5rem;
+
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(50, 50, 100, 0.95);
+    border-radius: 34px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.switch-label:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.switch-checkbox:checked+.switch-label {
+    background-color: #a0a0a0;
+}
+
+.switch-checkbox:checked+.switch-label:before {
+    transform: translateX(26px);
+}

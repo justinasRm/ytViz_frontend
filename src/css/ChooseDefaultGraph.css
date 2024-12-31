@@ -28,3 +28,16 @@
     width: 100%;
     padding: 10px;
 }
+
+.buttonEnabled {
+    background-color: green;
+    color: white;
+    /* padding: 10px 24px; */
+    border: none;
+    cursor: pointer;
+}
+
+.buttonEnabled:hover {
+    background-color: rgb(94, 161, 94);
+
+}
