@@ -4,6 +4,8 @@ import * as d3 from 'd3-force';
 import * as THREE from 'three';
 import { EdgeData, NodeData, graphResponse } from './App';
 import { SelectedInfo, RenderableNode } from './LoadGraph_2d';
+import { useAppDispatch } from './redux/hooks';
+import { setLoadingWithDelay } from './redux/loadingSlice';
 
 const imageCache = new Map<string, THREE.Texture>();
 
@@ -20,25 +22,18 @@ function getNodeBaseSize(node: NodeData): number {
 function createNodeObject(node: RenderableNode): THREE.Object3D {
     const baseSize = getNodeBaseSize(node);
     const isVideo = node.type === 'video';
-
     if (node.thumbnail_link) {
         const texture = imageCache.get(node.thumbnail_link);
         if (texture) {
             if (isVideo) {
-                const aspect = 16 / 9;
-                const width = baseSize;
-                const height = width / aspect;
-                const geometry = new THREE.PlaneGeometry(width, height);
+                const geometry = new THREE.CircleGeometry(baseSize, 32);
                 const material = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
+                    map: texture
                 });
 
-                const plane = new THREE.Mesh(geometry, material);
-                plane.rotation.x = -Math.PI / 2;
-                return plane;
-            }
-            else {
+                const circle = new THREE.Mesh(geometry, material);
+                return circle;
+            } else {
                 const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
                 const sprite = new THREE.Sprite(spriteMaterial);
                 sprite.scale.set(baseSize, baseSize, 1);
@@ -59,8 +54,6 @@ function LoadGraph_3d({ graphData }: { graphData: graphResponse }) {
 
     const [selectedInfo, setSelectedInfo] = useState<SelectedInfo>(null);
 
-    const [loading, setLoading] = useState(true);
-
     const memoizedGraphData = useMemo(
         () => ({
             nodes: graphData.nodes,
@@ -68,51 +61,62 @@ function LoadGraph_3d({ graphData }: { graphData: graphResponse }) {
         }),
         [graphData]
     );
+    const dispatch = useAppDispatch();
 
     useEffect(() => {
         graphRef.current !== null && graphRef.current.refresh()
     }, [graphRef.current])
 
-    useEffect(() => {
+    const preloadImages = async (nodes: NodeData[], abortSignal: AbortSignal) => {
         const textureLoader = new THREE.TextureLoader();
-
-        const promises = graphData.nodes.map((node) => {
+        for (const node of nodes) {
             if (node.thumbnail_link && !imageCache.has(node.thumbnail_link)) {
-                return new Promise<void>((resolve, reject) => {
-                    textureLoader.load(
-                        node.thumbnail_link,
-                        (texture) => {
-                            imageCache.set(node.thumbnail_link!, texture);
-                            resolve();
-                        },
-                        undefined,
-                        (error) => {
-                            console.error(`Failed to load image: ${node.thumbnail_link}`, error);
-                            reject(error);
-                        }
-                    );
-                });
+                if (abortSignal.aborted) {
+                    console.warn('Preloading aborted');
+                    return;
+                }
+                textureLoader.load(
+                    node.thumbnail_link,
+                    (texture) => {
+                        imageCache.set(node.thumbnail_link!, texture);
+                    },
+                    undefined,
+                    (error) => {
+                        console.error(`Failed to load image: ${node.thumbnail_link}`, error);
+                        textureLoader.load(
+                            process.env.PUBLIC_URL + '/defaultIcon.jpg',
+                            (texture) => {
+                                imageCache.set(node.thumbnail_link, texture);
+                            },
+                            undefined,
+                            (error) => {
+                                console.log('error after error..');
+
+                                console.log(error);
+                            }
+                        );
+                    }
+                );
+
             }
-            return Promise.resolve();
-        });
-        Promise.all(promises)
-            .then(() => {
-                setLoading(false);
-
-            })
-            .catch((error) => {
-                console.error('Error preloading textures:', error);
-                setLoading(false);
-            });
-
-
-    }, [graphData]);
-
-    useEffect(() => {
-        if (!loading && graphRef.current) {
-            graphRef.current.refresh();
         }
-    }, [loading]);
+        dispatch(setLoadingWithDelay(false, 1));
+
+    };
+    useEffect(() => {
+        const abortController = new AbortController();
+        const { signal } = abortController;
+
+        if (graphData.nodes) {
+            preloadImages(graphData.nodes, signal);
+        }
+
+        return () => {
+            // Trigger abort when the component unmounts
+            abortController.abort();
+            console.warn('Component unmounted, preloading aborted');
+        };
+    }, [graphData.nodes]);
 
     const handleNodeClick = useCallback(
         (node: RenderableNode, event: MouseEvent) => {
@@ -174,24 +178,6 @@ function LoadGraph_3d({ graphData }: { graphData: graphResponse }) {
         []
     );
 
-    if (loading) {
-        return (
-            <div
-                style={{
-                    backgroundColor: 'black',
-                    color: 'white',
-                    width: '100vw',
-                    height: '100vh',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
-            >
-                <h2>Loading images...</h2>
-            </div>
-        );
-    }
-
     return (
         <div style={{ display: 'flex', width: '100vw', height: '100vh', backgroundColor: 'black' }}>
             <div style={{ flex: 1 }}>
@@ -200,7 +186,7 @@ function LoadGraph_3d({ graphData }: { graphData: graphResponse }) {
                     graphData={memoizedGraphData as any}
                     cooldownTime={3000}
                     warmupTicks={100}
-                    controlType="orbit"
+                    // controlType="orbit"
                     nodeAutoColorBy={null}
                     nodeId="id"
                     linkSource="source"

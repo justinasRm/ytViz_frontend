@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ForceGraph2D } from 'react-force-graph';
 import * as d3 from 'd3-force';
 import { EdgeData, NodeData, graphResponse } from './App';
+import { setLoadingWithDelay } from './redux/loadingSlice';
+import { useAppDispatch } from './redux/hooks';
 
 export type SelectedInfo =
     | { type: 'node'; data: RenderableNode }
@@ -78,31 +80,52 @@ function LoadGraph_2d({ graphData }: { graphData: graphResponse }) {
     }), [graphData]);
 
     const graphRef = React.useRef<any>(null);
-    const [strengthVideo, setStrengthVideo] = React.useState(-100);
-    const [strengthUser, setStrengthUser] = React.useState(-500);
-    // -100, -500 looks good when not a lot of comments.
-    const [selectedInfo, setSelectedInfo] = React.useState<SelectedInfo>(null);
+    const strengthVideo = -100;
+    const strengthUser = -500;
 
-    const preloadImages = (nodes: NodeData[]) => {
-        nodes.forEach((node) => {
+    const [selectedInfo, setSelectedInfo] = React.useState<SelectedInfo>(null);
+    const dispatch = useAppDispatch();
+
+    const preloadImages = async (nodes: NodeData[], abortSignal: AbortSignal) => {
+        for (const node of nodes) {
             if (node.thumbnail_link && !imageCache.has(node.thumbnail_link)) {
+                if (abortSignal.aborted) {
+                    console.log('aborted')
+                    return;
+                }
+
                 const img = new Image();
                 img.src = node.thumbnail_link;
                 img.onload = () => {
                     imageCache.set(node.thumbnail_link, img);
                 };
-                img.onerror = () => {
+                img.onerror = (err) => {
+                    console.log(err)
                     console.error(`Failed to load image: ${node.thumbnail_link}`);
+
+                    img.src = process.env.PUBLIC_URL + 'defaultIcon.jpg';
+
                 };
             }
-        });
+        };
+        console.log('done')
+        dispatch(setLoadingWithDelay(false, 1));
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
+        const abortController = new AbortController();
+        const { signal } = abortController;
+
         if (graphData.nodes) {
-            preloadImages(graphData.nodes);
+            preloadImages(graphData.nodes, signal);
         }
-    }, [graphData])
+
+        return () => {
+            // Trigger abort when the component unmounts
+            abortController.abort();
+            console.warn('Component unmounted, preloading aborted');
+        };
+    }, [graphData.nodes]);
 
     React.useEffect(() => {
         if (graphRef.current) {
@@ -198,10 +221,6 @@ function LoadGraph_2d({ graphData }: { graphData: graphResponse }) {
             graphRef.current.resumeAnimation();
         }
     }, []);
-
-
-
-
 
     return (
         <div style={{ display: 'flex', width: '100vw', height: '100vh', backgroundColor: 'black' }}>
