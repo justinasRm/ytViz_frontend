@@ -6,12 +6,15 @@ import { VideoPlayer } from './helpers/Player';
 interface ChooseDefaultGraphProps {
     setNumber: React.Dispatch<React.SetStateAction<number | null>>;
 }
-
+interface ErrorType {
+    message: string;
+    type: 'submitError' | 'other'
+}
 function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
     const [graphType, setGraphType] = React.useState<'3d' | '2d'>((localStorage.getItem('graphType') as '2d' | '3d') || '2d');
     const [videoLinks, setVideoLinks] = React.useState<string[]>([]);
     const [inputValue, setInputValue] = React.useState<string>('');
-    const [error, setError] = React.useState<string | null>(null);
+    const [error, setError] = React.useState<ErrorType | null>(null);
 
     React.useEffect(() => {
         localStorage.setItem('graphType', graphType);
@@ -19,16 +22,22 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
 
     const handleAddLink = () => {
         if (inputValue.trim() === '') {
-            setError('Video link cannot be empty.');
+            setError({ type: 'other', message: 'Video link cannot be empty.' });
             return;
         }
         if (videoLinks.length >= 5) {
-            setError('You can only add up to 5 video links.');
+            setError({ type: 'other', message: 'You can only add up to 5 video links.' });
             return;
         }
         const youtubeVidRegex = /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
         if (!youtubeVidRegex.test(inputValue.trim())) {
-            setError('Invalid video link format. Please use a valid URL.');
+            setError({ type: 'other', message: 'Invalid video link format. Please use a valid URL.' });
+
+            return;
+        }
+        if (videoLinks.includes(inputValue.trim())) {
+            setError({ type: 'other', message: 'Video link already added.' });
+
             return;
         }
 
@@ -41,22 +50,31 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
         setVideoLinks((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmitLinks = () => {
+    const handleSubmitLinks = async () => {
         if (videoLinks.length === 0) {
-            setError('Please add at least one video link before submitting.');
+            setError({ type: 'other', message: 'Please add at least one video link before submitting.' });
             return;
         }
         setError(null);
 
-        // fetch('http://backendblabla check there if vids are good')
+        // const response = await fetch(`http://127.0.0.1:8000/default-graphs?graph_num=${number}`);
+        console.log(videoLinks);
+        const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}`);
+        const data = await response.json();
+        if (!response.ok) {
+            console.log(data);
+            console.log('error')
+            setError({ type: 'submitError', message: data.error || 'An unknown error occurred' });
+            return;
+        }
+
+
     };
 
     return (
         <div className='chooseDefaultGraph-parent'>
             <div className='chooseDefaultGraph-inner'>
-                <h1 style={{ marginBottom: 5, marginTop: 0 }}>Choose an existing dataset</h1>
-                <h1 style={{ margin: 0 }}>OR</h1>
-                <h1 style={{ marginTop: 5, marginBottom: 0 }}>Input videos you want (up to 5)</h1>
+                <h1 style={{ marginBottom: 5, marginTop: 0 }}>Choose an existing dataset or use videos you want(up to 5)</h1>
             </div>
 
             <div className='chooseGraphContainer'>
@@ -94,7 +112,7 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
                         Add
                     </button>
                 </div>
-                {error && <p className='errorMsg'>{error}</p>}
+                {error && error.type == 'other' && <p className='errorMsg'>{error.message}</p>}
                 <ul style={{ color: 'white', listStyle: 'none', padding: 0 }}>
                     {videoLinks.map((link, index) => (
                         <div className='videoLinkDiv'>
@@ -113,6 +131,7 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
                 >
                     Submit Links
                 </button>
+                {error && error.type == 'submitError' && <div className='errorMsg'>{error.message}</div>}
             </div>
 
             <h3 style={{ marginTop: 100, color: 'white', fontSize: '2rem' }}>Set graph type</h3>

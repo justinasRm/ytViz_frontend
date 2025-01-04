@@ -93,6 +93,7 @@ button:hover {
 .errorMsg {
   color: red;
   font-size: 1rem;
+  white-space: pre-line;
 }
 
 .clearButton {
