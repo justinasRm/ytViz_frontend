@@ -44,7 +44,7 @@ button {
   color: white;
   border: none;
   border-radius: 3px;
-  font-size: 1rem;
+  font-size: 1.5rem;
   cursor: pointer;
   z-index: 1;
 }
@@ -88,4 +88,23 @@ button:hover {
 .loaderParent.fade-in {
   opacity: 1;
   pointer-events: auto;
+}
+
+.errorMsg {
+  color: red;
+  font-size: 1rem;
+}
+
+.clearButton {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.clearButton:hover {
+  background: none;
+
+  color: rgb(193, 193, 193)
 }
