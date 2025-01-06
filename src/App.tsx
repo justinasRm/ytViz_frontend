@@ -5,6 +5,7 @@ import ChooseDefaultGraph from './ChooseDefaultGraph';
 import { setLoadingWithDelay } from './redux/loadingSlice';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import LoadingComponent from './LoadingComponent';
+import MinimalLoadingWithText from './MinimalLoadingWithText';
 
 export interface BaseNode {
   id: string;
@@ -46,7 +47,8 @@ function App() {
   const [number, setNumber] = useState<number | null>(null);
   const dispatch = useAppDispatch();
   const loading = useAppSelector((state) => state.loading.loading);
-  const loadingFadeout = 5
+  const minimalLoadingWithText = useAppSelector((state) => state.loading.minimalLoadingWithText);
+
   useEffect(() => {
     if (!number) return;
     const fetchGraphData = async (): Promise<void> => {
@@ -81,8 +83,10 @@ function App() {
 
   return (
     <div className="App">
+      {minimalLoadingWithText && <MinimalLoadingWithText text={minimalLoadingWithText} />}
+
       {<LoadingComponent loading={loading} />}
-      {!graphData && <ChooseDefaultGraph setNumber={setNumber} />}
+      {!graphData && <ChooseDefaultGraph setNumber={setNumber} setGraphData={setGraphData} />}
       {graphData && <>
         <button className='backButton' onClick={() => {
           setGraphData(null);

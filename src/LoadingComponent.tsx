@@ -27,7 +27,7 @@ const LoadingComponent: React.FC<LoadingComponentProps> = ({ loading }) => {
             className={`loaderParent ${loading ? 'fade-in' : 'fade-out'}`}
             style={{ transitionDuration: `2s` }}
         >
-            <p>Loading...</p>
+            <p>Loading graph connections</p>
             <ReactLoading
                 type={'bars'}
                 color={'rgba(50, 50, 100, 0.95)'}

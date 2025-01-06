@@ -2,23 +2,39 @@ import React from 'react';
 import './css/ChooseDefaultGraph.css';
 import Switch from './helpers/Switch';
 import { VideoPlayer } from './helpers/Player';
+import { graphResponse } from './App';
+import { useAppDispatch } from './redux/hooks';
+import { setLoadingWithDelay, setMinimalLoadingWithText } from './redux/loadingSlice';
 
 interface ChooseDefaultGraphProps {
     setNumber: React.Dispatch<React.SetStateAction<number | null>>;
+    setGraphData: React.Dispatch<React.SetStateAction<graphResponse | null>>;
 }
 interface ErrorType {
     message: string;
     type: 'submitError' | 'other'
 }
-function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
+function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps) {
     const [graphType, setGraphType] = React.useState<'3d' | '2d'>((localStorage.getItem('graphType') as '2d' | '3d') || '2d');
     const [videoLinks, setVideoLinks] = React.useState<string[]>([]);
     const [inputValue, setInputValue] = React.useState<string>('');
+    const [disabledCommentsVidID, setDisabledCommentsVidID] = React.useState<string | null>(null);
     const [error, setError] = React.useState<ErrorType | null>(null);
+    const dispatch = useAppDispatch();
 
     React.useEffect(() => {
         localStorage.setItem('graphType', graphType);
     }, [graphType]);
+
+    const parseErrorMessage = (message: string) => {
+        const parts = message.split(/(<strong>.*?<\/strong>)/g); // only <strong> tags supported right now.
+        return parts.map((part, index) => {
+            if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+                return <strong key={index} style={{ color: '#ff0000' }}>{part.replace(/<\/?strong>/g, '')}</strong>;
+            }
+            return part;
+        });
+    };
 
     const handleAddLink = () => {
         if (inputValue.trim() === '') {
@@ -29,7 +45,8 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
             setError({ type: 'other', message: 'You can only add up to 5 video links.' });
             return;
         }
-        const youtubeVidRegex = /^(https?\:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+        const youtubeVidRegex = /^https:\/\/www\.youtube\.com\/watch\?v=([\w-]+)(&.*)?$/;
+
         if (!youtubeVidRegex.test(inputValue.trim())) {
             setError({ type: 'other', message: 'Invalid video link format. Please use a valid URL.' });
 
@@ -41,7 +58,15 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
             return;
         }
 
-        setVideoLinks((prev) => [...prev, inputValue.trim()]);
+        const match = inputValue.trim().match(youtubeVidRegex);
+        console.log(match);
+        if (match) {
+            const videoId = match[1];
+            const formattedUrl = `https://www.youtube.com/watch?v=${videoId}`;
+            setVideoLinks((prev) => [...prev, formattedUrl]);
+        } else {
+            setVideoLinks((prev) => [...prev, inputValue.trim()]);
+        }
         setInputValue('');
         setError(null);
     };
@@ -56,17 +81,33 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
             return;
         }
         setError(null);
+        dispatch(setMinimalLoadingWithText('Generating graphs...'));
 
-        // const response = await fetch(`http://127.0.0.1:8000/default-graphs?graph_num=${number}`);
         console.log(videoLinks);
-        const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}`);
-        const data = await response.json();
-        if (!response.ok) {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=600`);
+            const data = await response.json();
+            console.log('reponse:')
             console.log(data);
-            console.log('error')
-            setError({ type: 'submitError', message: data.error || 'An unknown error occurred' });
+            dispatch(setMinimalLoadingWithText(false));
+            if (!response.ok) { // 400
+                if (data.error && data.error.includes('Comments dissabled')) {
+                    const disabledCommentsVidIDVideoId = data.error.split('youtube.com/watch?v=')[1].slice(0, 11);
+                    console.log(disabledCommentsVidIDVideoId);
+                    setDisabledCommentsVidID(disabledCommentsVidIDVideoId);
+                }
+                setError({ type: 'submitError', message: data.error || 'An unknown error occurred' });
+                return;
+            }
+            dispatch(setLoadingWithDelay(true, 2));
+            setGraphData(data);
+        } catch (err) {
+            dispatch(setMinimalLoadingWithText(false));
+            console.log(err);
+            setError({ type: 'submitError', message: 'An unknown error occurred' });
             return;
         }
+
 
 
     };
@@ -93,7 +134,9 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
             </div>
 
             <div className='videoLinksContainer' style={{ marginTop: '50px' }}>
-                <h3 style={{ color: 'white', fontSize: '2rem' }}>Add Video Links</h3>
+                <h3 style={{ color: 'white', fontSize: '2rem', marginBottom: 0 }}>Add Video Links</h3>
+                <p style={{ color: 'white', margin: 0 }}>Add up to 5 video links</p>
+                <p style={{ color: 'white', margin: 0, marginBottom: '30px' }}>Link format: https://www.youtube.com/watch?v=VIDEO_ID</p>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                     <input
                         type='text'
@@ -115,7 +158,7 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
                 {error && error.type == 'other' && <p className='errorMsg'>{error.message}</p>}
                 <ul style={{ color: 'white', listStyle: 'none', padding: 0 }}>
                     {videoLinks.map((link, index) => (
-                        <div className='videoLinkDiv'>
+                        <div key={link.slice(-11)} className={`videoLinkDiv ${link.slice(-11) === disabledCommentsVidID && 'videoLinkDiv_disabledCommentsVidID'}`} >
                             <button
                                 onClick={() => handleRemoveLink(index)}
                             >
@@ -131,7 +174,20 @@ function ChooseDefaultGraph({ setNumber }: ChooseDefaultGraphProps) {
                 >
                     Submit Links
                 </button>
-                {error && error.type == 'submitError' && <div className='errorMsg'>{error.message}</div>}
+                <button onClick={() => {
+                    setVideoLinks([
+                        'https://www.youtube.com/watch?v=MeRIAew8eXc',
+                        'https://www.youtube.com/watch?v=Dlz_XHeUUis',
+                        'https://www.youtube.com/watch?v=MtRuKrsdXe0'
+                    ])
+                }}>
+                    Fill in with default links
+                </button>
+                {error && error.type === 'submitError' && (
+                    <div className='errorMsg'>
+                        {parseErrorMessage(error.message)}
+                    </div>
+                )}
             </div>
 
             <h3 style={{ marginTop: 100, color: 'white', fontSize: '2rem' }}>Set graph type</h3>

@@ -4,11 +4,13 @@ import { RootState } from './store';
 
 interface LoadingState {
     loading: boolean;
+    minimalLoadingWithText: false | string;
 }
 
 // Initial State
 const initialState: LoadingState = {
     loading: false,
+    minimalLoadingWithText: false
 };
 
 const loadingSlice = createSlice({
@@ -18,10 +20,13 @@ const loadingSlice = createSlice({
         setLoading(state, action: PayloadAction<boolean>) {
             state.loading = action.payload;
         },
+        setMinimalLoadingWithText(state, action: PayloadAction<false | string>) {
+            state.minimalLoadingWithText = action.payload;
+        }
     },
 });
 
-export const { setLoading } = loadingSlice.actions;
+export const { setLoading, setMinimalLoadingWithText } = loadingSlice.actions;
 
 // Thunk for delayed false loading
 export const setLoadingWithDelay = (
