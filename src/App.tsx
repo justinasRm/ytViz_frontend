@@ -78,13 +78,11 @@ function App() {
     fetchGraphData();
   }, [number]);
 
-
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div className="App">
       {minimalLoadingWithText && <MinimalLoadingWithText text={minimalLoadingWithText} />}
-
       {<LoadingComponent loading={loading} />}
       {!graphData && <ChooseDefaultGraph setNumber={setNumber} setGraphData={setGraphData} />}
       {graphData && <>

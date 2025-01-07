@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import loadingReducer from './loadingSlice';
+import quotaReducer from './APIQuotaSlice';
 
 const store = configureStore({
     reducer: {
         loading: loadingReducer,
+        quota: quotaReducer,
     },
 });
 
