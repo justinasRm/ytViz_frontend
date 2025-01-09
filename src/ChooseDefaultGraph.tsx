@@ -120,7 +120,8 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
                 const response = await fetch(`http://127.0.0.1:8000/get-api-quota`);
                 if (!response.ok) {
                     // will only happen if backend is completely down
-                    // still need better error handling
+
+
                     return;
                 }
                 const data: { quota: number } = await response.json();
@@ -137,6 +138,18 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
         <>
             <APIQuotaDisplay />
             <div className='chooseDefaultGraph-parent'>
+                <div className='mobileViewDisclaimer-parent'>
+                    <div className='mobileViewDisclaimer-inner'
+                    >
+                        <p>
+                            This website uses WebGL, which is not optimized for mobile phones.
+                            Because of performance limitations on mobile devices and viewing limitation on smaller screens the experience is not optimal.
+                        </p>
+                        <p>
+                            Please use a desktop for the best experience.
+                        </p>
+                    </div>
+                </div>
                 <div className='chooseDefaultGraph-inner'>
                     <h1 style={{ marginBottom: 5, marginTop: 0 }}>Choose an existing dataset or use videos you want(up to 5)</h1>
                 </div>
@@ -181,7 +194,7 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
                     {error && error.type == 'other' && <p className='errorMsg'>{error.message}</p>}
                     <ul style={{ color: 'white', listStyle: 'none', padding: 0 }}>
                         {videoLinks.map((link, index) => (
-                            <div key={link.slice(-11)} className={`videoLinkDiv ${link.slice(-11) === disabledCommentsVidID && 'videoLinkDiv_disabledCommentsVidID'}`} >
+                            <div key={link.slice(-11)} className={`videoLinkDiv ${link.slice(-11) === disabledCommentsVidID && 'videoLinkDiv_disabledComments'}`} >
                                 <button
                                     onClick={() => handleRemoveLink(index)}
                                 >

@@ -16,8 +16,8 @@
 }
 
 .quota-parentDiv {
-    margin: 20px auto;
-    width: 100%;
+    margin: 3vw auto;
+    width: 94vw;
     max-width: 500px;
     color: white
 }
@@ -37,4 +37,34 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.quotaModal {
+    position: fixed;
+    z-index: 1110;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: black;
+}
+
+.quotaModalInner {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80vw;
+}
+
+@media (max-width: 600px) {
+    .quotaModalInner {
+        width: 90vw;
+        margin: 0;
+        padding: 5vw
+    }
+
 }

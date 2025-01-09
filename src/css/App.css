@@ -34,6 +34,16 @@ body {
   color: white;
 }
 
+@media (max-width: 768px) {
+  .info-panel {
+    width: 94vw;
+    padding: 3vw;
+    height: 50vh;
+    bottom: 0;
+    top: auto;
+  }
+}
+
 button {
   margin: 10px;
   padding-left: 20px;
@@ -108,4 +118,36 @@ button:hover {
   background: none;
 
   color: rgb(193, 193, 193)
+}
+
+.mobileViewDisclaimer-parent {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileViewDisclaimer-parent {
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.806);
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .mobileViewDisclaimer-inner {
+    font-size: 2rem;
+    width: 80%;
+    padding: 5%;
+    background-color: rgba(50, 50, 100, 0.95);
+    border-radius: 10px;
+  }
+
+  html {
+    overflow: hidden;
+  }
 }
