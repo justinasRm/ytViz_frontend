@@ -7,6 +7,8 @@ import { useAppDispatch } from './redux/hooks';
 import { setLoadingWithDelay, setMinimalLoadingWithText } from './redux/loadingSlice';
 import APIQuotaDisplay from './APIQuotaDisplay';
 import { updateAPIQuota } from './redux/APIQuotaSlice';
+import { useSelector } from 'react-redux';
+import { RootState } from './redux/store';
 
 interface ChooseDefaultGraphProps {
     setNumber: React.Dispatch<React.SetStateAction<number | null>>;
@@ -22,7 +24,9 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
     const [inputValue, setInputValue] = React.useState<string>('');
     const [disabledCommentsVidID, setDisabledCommentsVidID] = React.useState<string | null>(null);
     const [error, setError] = React.useState<ErrorType | null>(null);
+    const APIQuota = useSelector((state: RootState) => state.quota.quota);
     const dispatch = useAppDispatch();
+
 
     React.useEffect(() => {
         localStorage.setItem('graphType', graphType);
@@ -82,12 +86,19 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
             setError({ type: 'other', message: 'Please add at least one video link before submitting.' });
             return;
         }
+        let linkMap = new Set()
+        for (let i = 0; i < videoLinks.length; i++) {
+            if (linkMap.has(videoLinks[i])) {
+                setError({ type: 'submitError', message: `There are duplicate links. Please remove the duplicates.` });
+                return;
+            }
+            linkMap.add(videoLinks[i]);
+        }
         setError(null);
         dispatch(setMinimalLoadingWithText('Generating graphs...'));
 
-        console.log(videoLinks);
         try {
-            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=500`);
+            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=10000`);
             const data = await response.json();
             console.log('reponse:')
             console.log(data);
@@ -168,68 +179,74 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
                         </div>
                     ))}
                 </div>
-
-                <div className='videoLinksContainer' style={{ marginTop: '50px' }}>
-                    <h3 style={{ color: 'white', fontSize: '2rem', marginBottom: 0 }}>Add Video Links</h3>
-                    <p style={{ color: 'white', margin: 0 }}>Add up to 5 video links</p>
-                    <p style={{ color: 'white', margin: 0, marginBottom: '30px' }}>Link format: https://www.youtube.com/watch?v=VIDEO_ID</p>
-                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                        <input
-                            type='text'
-                            placeholder='Enter video link'
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            style={{
-                                flex: 1,
-                                padding: '8px',
-                                borderRadius: '4px',
-                                border: '1px solid #ccc',
-                                fontSize: '1.5rem'
-                            }}
-                        />
-                        <button onClick={handleAddLink}>
-                            Add
-                        </button>
-                    </div>
-                    {error && error.type == 'other' && <p className='errorMsg'>{error.message}</p>}
-                    <ul style={{ color: 'white', listStyle: 'none', padding: 0 }}>
-                        {videoLinks.map((link, index) => (
-                            <div key={link.slice(-11)} className={`videoLinkDiv ${link.slice(-11) === disabledCommentsVidID && 'videoLinkDiv_disabledComments'}`} >
-                                <button
-                                    onClick={() => handleRemoveLink(index)}
-                                >
-                                    Remove
-                                </button>
-                                <VideoPlayer key={index} videoUrl={link} />
-                            </div>
-                        ))}
-                    </ul>
-                    <button
-                        onClick={handleSubmitLinks}
-                        className='clearButton'
-                    >
-                        Submit Links
-                    </button>
-                    <button onClick={() => {
-                        setVideoLinks([
-                            'https://www.youtube.com/watch?v=MeRIAew8eXc',
-                            'https://www.youtube.com/watch?v=Dlz_XHeUUis',
-                            'https://www.youtube.com/watch?v=MtRuKrsdXe0'
-                        ])
-                    }}>
-                        Fill in with default links
-                    </button>
-                    {error && error.type === 'submitError' && (
-                        <div className='errorMsg'>
-                            {parseErrorMessage(error.message)}
+                {APIQuota >= 10000 ? <div>
+                    <h3 style={{ color: 'red', fontSize: '2rem' }}><strong>API Quota Limit Reached</strong></h3>
+                    <p style={{ color: 'red' }}>Sadly the API quota is <strong>at</strong> or <strong>around</strong> the 10,000 limit, so generating new graphs is not possible right now.</p>
+                </div> :
+                    <div className={`videoLinksContainer`} style={{ marginTop: '50px' }}>
+                        <h3 style={{ color: 'white', fontSize: '2rem', marginBottom: 0 }}>Add Video Links</h3>
+                        <p style={{ color: 'white', margin: 0 }}>Add up to 5 video links</p>
+                        <p style={{ color: 'white', margin: 0, marginBottom: '30px' }}>Link format: https://www.youtube.com/watch?v=VIDEO_ID</p>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                            <input
+                                type='text'
+                                placeholder='Enter video link'
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                style={{
+                                    flex: 1,
+                                    padding: '8px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #ccc',
+                                    fontSize: '1.5rem'
+                                }}
+                            />
+                            <button onClick={handleAddLink}>
+                                Add
+                            </button>
                         </div>
-                    )}
-                </div>
+                        {error && error.type == 'other' && <p className='errorMsg'>{error.message}</p>}
+                        <ul style={{ color: 'white', listStyle: 'none', padding: 0 }}>
+                            {videoLinks.map((link, index) => (
+                                <div key={link.slice(-11)} className={`videoLinkDiv ${link.slice(-11) === disabledCommentsVidID && 'videoLinkDiv_disabledComments'}`} >
+                                    <button
+                                        onClick={() => handleRemoveLink(index)}
+                                    >
+                                        Remove
+                                    </button>
+                                    <VideoPlayer key={index} videoUrl={link} />
+                                </div>
+                            ))}
+                        </ul>
+                        <button
+                            onClick={handleSubmitLinks}
+                            className='clearButton'
+                        >
+                            Submit Links
+                        </button>
+                        <button onClick={() => {
+                            setVideoLinks([
+                                'https://www.youtube.com/watch?v=SDTZ7iX4vTQ',
+                                'https://www.youtube.com/watch?v=PWgvGjAhvIw',
+                                'https://www.youtube.com/watch?v=gGdGFtwCNBE',
+                                'https://www.youtube.com/watch?v=kYtGl1dX5qI',
+
+
+                            ])
+                        }}>
+                            Fill in with default links
+                        </button>
+                        {error && error.type === 'submitError' && (
+                            <div className='errorMsg'>
+                                {parseErrorMessage(error.message)}
+                            </div>
+                        )}
+                    </div>}
 
                 <h3 style={{ marginTop: 100, color: 'white', fontSize: '2rem' }}>Set graph type</h3>
                 <Switch
                     isOn={graphType === '3d'}
-                    handleToggle={() => setGraphType(graphType === '3d' ? '2d' : '3d')}
+                    handleToggle={() => { alert('3D graphs have problems loading images for sprites, so some images may not be loaded 🫤'); setGraphType(graphType === '3d' ? '2d' : '3d') }}
                 />
                 <span style={{ color: 'white', margin: 20 }}>
                     2D graphs are easier to render (less laggy)

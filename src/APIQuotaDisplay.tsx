@@ -21,7 +21,7 @@ function APIQuotaDisplay() {
     return (
         <div className='quota-parentDiv'>
             <div className='quota-2ndParentDiv'>
-                <h1 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>API Quota Usage</h1>
+                <h1 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>API Quota Usage(approximate)</h1>
                 <button className='questionMarkButton' onClick={() => setIsQuotaModalShown(true)}
                 >
                     ?

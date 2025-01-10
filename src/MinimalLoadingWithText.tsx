@@ -26,10 +26,12 @@ const OverlayLoadingWithText: React.FC<OverlayLoadingWithTextProps> = ({ text })
     }, []);
 
     const messages = [
-        ` Hold on...`,
-        ` It's working I promise!`,
-        ` Maybe a second or two more? 🤔`,
-        ` Ok no more funny messages, just wait it out.`
+        ` Hold on...\n`,
+        ` It's working I promise!\n`,
+        ` Maybe a second or two more? 🤔\n`,
+        ` It really is almost done. \n`,
+        ` hopefully... \n`,
+        ` Ok no more funny messages, just wait it out.\n`
     ];
 
     React.useEffect(() => {
@@ -66,8 +68,8 @@ const OverlayLoadingWithText: React.FC<OverlayLoadingWithTextProps> = ({ text })
             <div style={{
                 color: 'white'
             }}>
-                <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}>Loading</h2>
-                <h3>{displayText}</h3>
+                <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}>Generating - don't exit the page.</h2>
+                <h3 style={{ whiteSpace: 'pre-line' }}>{displayText}</h3>
             </div>
         </div>
 

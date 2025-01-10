@@ -6,7 +6,7 @@ import { setLoadingWithDelay } from './redux/loadingSlice';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
 import LoadingComponent from './LoadingComponent';
 import MinimalLoadingWithText from './MinimalLoadingWithText';
-
+import WelcomeScreen from './WelcomeScreen';
 export interface BaseNode {
   id: string;
   channel_title: string;
@@ -48,7 +48,7 @@ function App() {
   const dispatch = useAppDispatch();
   const loading = useAppSelector((state) => state.loading.loading);
   const minimalLoadingWithText = useAppSelector((state) => state.loading.minimalLoadingWithText);
-
+  const [welcomeScreen, showWelcomeScreen] = useState(true);
   useEffect(() => {
     if (!number) return;
     const fetchGraphData = async (): Promise<void> => {
@@ -82,15 +82,17 @@ function App() {
 
   return (
     <div className="App">
-      {minimalLoadingWithText && <MinimalLoadingWithText text={minimalLoadingWithText} />}
-      {<LoadingComponent loading={loading} />}
-      {!graphData && <ChooseDefaultGraph setNumber={setNumber} setGraphData={setGraphData} />}
-      {graphData && <>
-        <button className='backButton' onClick={() => {
-          setGraphData(null);
-          setNumber(null);
-        }}>Back</button>
-        <LoadGraph graphData={graphData} />
+      {welcomeScreen ? <WelcomeScreen showWelcomeScreen={showWelcomeScreen} /> : <>
+        {minimalLoadingWithText && <MinimalLoadingWithText text={minimalLoadingWithText} />}
+        {<LoadingComponent loading={loading} />}
+        {!graphData && <ChooseDefaultGraph setNumber={setNumber} setGraphData={setGraphData} />}
+        {graphData && <>
+          <button className='backButton' onClick={() => {
+            setGraphData(null);
+            setNumber(null);
+          }}>Back</button>
+          <LoadGraph graphData={graphData} />
+        </>}
       </>}
     </div>
   );

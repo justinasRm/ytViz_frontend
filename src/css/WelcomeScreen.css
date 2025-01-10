@@ -1,0 +1,40 @@
+/* <div className='welcomeScreenParent'>
+<h1>Youtube Comment Visualizer</h1>
+<p>This project is a visualization of the comments between Youtube videos.</p>
+<p>You can provide up to 5 youtube videos and see how the comments on them intersect.</p>
+<p>If the same user commented on the same videos, a connection will be made between them.</p>
+<p>The comment limit is 500(because of API usage quota), so the best result would be gotten by providing videos of the same channel, that have up to 500 comments.</p>
+<p>Click on the button below to start!</p>
+</div> */
+
+.welcomeScreenParent {
+    color: white;
+    width: 80%;
+    height: 100vh;
+    margin-left: 10%;
+    margin-right: 10%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+
+}
+
+.welcomeScreenInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.welcomeScreenParent h1 {
+    font-size: 3rem;
+    margin-bottom: 100px;
+}
+
+.welcomeScreenParent p {
+    font-size: 1rem;
+}
