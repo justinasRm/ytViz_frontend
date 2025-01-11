@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import './css/ChooseDefaultGraph.css';
 import Switch from './helpers/Switch';
 import { VideoPlayer } from './helpers/Player';
@@ -25,6 +25,7 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
     const [disabledCommentsVidID, setDisabledCommentsVidID] = React.useState<string | null>(null);
     const [error, setError] = React.useState<ErrorType | null>(null);
     const APIQuota = useSelector((state: RootState) => state.quota.quota);
+    const abortControllerRef = useRef<null | AbortController>(null);
     const dispatch = useAppDispatch();
 
 
@@ -96,9 +97,12 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
         }
         setError(null);
         dispatch(setMinimalLoadingWithText('Generating graphs...'));
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        const signal = controller.signal;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=10000`);
+            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=10000`, { signal });
             const data = await response.json();
             console.log('reponse:')
             console.log(data);
@@ -122,7 +126,7 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
         }
 
 
-
+        return controller;
     };
 
     React.useEffect(() => {
@@ -144,6 +148,15 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
         }
         fetchData();
     }, [])
+
+    React.useEffect(() => {
+        return () => {
+            // Cleanup: Abort fetch if component unmounts
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
+    }, []);
 
     return (
         <>

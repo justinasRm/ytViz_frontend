@@ -1,2 +1,0 @@
-TODO: reach API quota, see how that error should be handled.
-TODO: if generating new graphs and it takes a long time, if user quits during the generating, make sure the frontend quits the fetch and the backend terminates the graph creation process.
