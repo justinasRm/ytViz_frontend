@@ -239,12 +239,11 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
                         </button>
                         <button onClick={() => {
                             setVideoLinks([
-                                'https://www.youtube.com/watch?v=SDTZ7iX4vTQ',
-                                'https://www.youtube.com/watch?v=PWgvGjAhvIw',
-                                'https://www.youtube.com/watch?v=gGdGFtwCNBE',
-                                'https://www.youtube.com/watch?v=kYtGl1dX5qI',
-
-
+                                'https://www.youtube.com/watch?v=sXQxhojSdZM',
+                                'https://www.youtube.com/watch?v=JjXBrJfp5TE',
+                                'https://www.youtube.com/watch?v=q5J5ho7YUhA',
+                                'https://www.youtube.com/watch?v=Gjnup-PuquQ',
+                                'https://www.youtube.com/watch?v=Tn6-PIqc4UM'
                             ])
                         }}>
                             Fill in with default links
