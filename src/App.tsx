@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from './redux/hooks';
 import LoadingComponent from './LoadingComponent';
 import MinimalLoadingWithText from './MinimalLoadingWithText';
 import WelcomeScreen from './WelcomeScreen';
+
 export interface BaseNode {
   id: string;
   channel_title: string;
@@ -56,7 +57,7 @@ function App() {
         dispatch(setLoadingWithDelay(true));
         setError(null);
 
-        const response = await fetch(`http://127.0.0.1:8000/default-graphs?graph_num=${number}`);
+        const response = await fetch(`${process.env.REACT_APP_APIPREFIX}/default-graphs?graph_num=${number}`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

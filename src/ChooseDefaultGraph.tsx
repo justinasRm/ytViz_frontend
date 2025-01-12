@@ -102,7 +102,7 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
         const signal = controller.signal;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/make-video-graphs?links=${videoLinks.join(',')}&commentCount=10000`, { signal });
+            const response = await fetch(`${process.env.REACT_APP_APIPREFIX}/make-video-graphs?links=${videoLinks.join(',')}&commentCount=10000`, { signal });
             const data = await response.json();
             console.log('reponse:')
             console.log(data);
@@ -132,7 +132,7 @@ function ChooseDefaultGraph({ setNumber, setGraphData }: ChooseDefaultGraphProps
     React.useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/get-api-quota`);
+                const response = await fetch(`${process.env.REACT_APP_APIPREFIX}/get-api-quota`);
                 if (!response.ok) {
                     // will only happen if backend is completely down
 
